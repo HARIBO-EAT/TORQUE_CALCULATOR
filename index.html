@@ -3,57 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>구형 로봇 모터 선정 계산기</title>
+    <title>구형 로봇 토크 계산기</title>
     <style>
         body { font-family: 'Segoe UI', 'Apple SD Gothic Neo', sans-serif; padding: 20px; line-height: 1.6; background-color: #f0f2f5; color: #333; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-        h2 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; text-align: center; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        h2 { color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 15px; text-align: center; margin-top: 0; }
         
-        /* 입력 섹션 */
-        .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        /* 입력 그리드 */
+        .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
         .input-group { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; }
-        .input-group label { display: block; font-weight: 700; margin-bottom: 5px; color: #495057; font-size: 0.95em; }
+        .input-group label { display: block; font-weight: 700; margin-bottom: 5px; color: #495057; font-size: 0.9em; }
         .input-group input { width: 90%; padding: 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 16px; }
         .input-group small { display: block; color: #868e96; font-size: 0.8em; margin-top: 4px; }
         
-        /* 결과 비교 박스 */
-        .compare-box { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
-        @media (max-width: 600px) { .compare-box { grid-template-columns: 1fr; } }
+        /* 결과 비교 섹션 */
+        .result-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        @media (max-width: 700px) { .result-section { grid-template-columns: 1fr; } }
         
-        .scenario-card { padding: 20px; border-radius: 10px; border: 2px solid transparent; }
-        .scenario-a { background-color: #e3f2fd; border-color: #90caf9; } /* 파란색: 경사 */
-        .scenario-b { background-color: #ffebee; border-color: #ef9a9a; } /* 빨간색: 장애물 */
+        .result-card { padding: 20px; border-radius: 12px; border: 2px solid transparent; position: relative; overflow: hidden; }
+        .card-slope { background-color: #e3f2fd; border-color: #64b5f6; } /* 경사로 파랑 */
+        .card-step { background-color: #ffebee; border-color: #e57373; } /* 장애물 빨강 */
         
-        .card-title { font-weight: bold; font-size: 1.1em; margin-bottom: 10px; display: block; text-align: center; }
-        .card-val { font-size: 1.4em; font-weight: 800; display: block; text-align: center; margin: 10px 0; }
-        .card-detail { font-size: 0.9em; color: #555; text-align: center; }
+        .card-header { font-weight: bold; font-size: 1.2em; display: block; margin-bottom: 15px; border-bottom: 2px solid rgba(0,0,0,0.1); padding-bottom: 10px; }
+        
+        .raw-row { display: flex; justify-content: space-between; font-size: 0.9em; color: #555; margin-bottom: 5px; }
+        .final-val-box { background: rgba(255,255,255,0.6); padding: 15px; border-radius: 8px; margin-top: 15px; text-align: center; border: 1px solid rgba(0,0,0,0.1); }
+        .final-label { display: block; font-size: 0.9em; font-weight: bold; color: #333; margin-bottom: 5px; }
+        .final-value { font-size: 1.6em; font-weight: 900; display: block; }
+        .final-unit { font-size: 0.8em; color: #666; font-weight: normal; display: block; }
+        
+        .card-slope .final-value { color: #1565c0; }
+        .card-step .final-value { color: #c62828; }
 
-        /* 최종 결과 */
-        .final-box { background: #263238; color: white; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 30px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .final-val { font-size: 1.8em; font-weight: bold; color: #ffeb3b; }
-
-        /* 로그 박스 */
-        .log-box { background: #37474f; color: #eceff1; padding: 20px; border-radius: 8px; font-family: 'Consolas', monospace; font-size: 0.9em; overflow-x: auto; }
-        .log-header { color: #81d4fa; font-weight: bold; border-bottom: 1px solid #546e7a; padding-bottom: 8px; margin-bottom: 10px; }
-        .formula { color: #ffcc80; margin-bottom: 3px; } /* 수식 색상 */
-        .calc-line { margin-bottom: 15px; padding-left: 10px; border-left: 2px solid #546e7a; }
-        .var-hl { color: #69f0ae; }
+        /* 로그 박스 (핵심 디자인) */
+        .log-box { background: #263238; color: #eceff1; padding: 20px; border-radius: 8px; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.85em; overflow-x: auto; white-space: pre-wrap; }
+        .log-title { color: #ffca28; font-weight: bold; border-bottom: 1px solid #546e7a; padding-bottom: 10px; margin-bottom: 15px; font-size: 1.1em; }
+        
+        /* 로그 내부 스타일 */
+        .log-section { margin-bottom: 20px; border-left: 3px solid #546e7a; padding-left: 15px; }
+        .log-sec-title { color: #81d4fa; font-weight: bold; margin-bottom: 5px; display: block; }
+        .formula-line { color: #bdbdbd; margin-bottom: 2px; }
+        .calc-line { color: #fff; margin-bottom: 8px; }
+        .sub-val { color: #ffcc80; } /* 대입된 숫자 색상 */
+        .result-hl { color: #69f0ae; font-weight: bold; } /* 중간 결과값 색상 */
+        .math-symbol { color: #80cbc4; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>구형 로봇 모터 선정 계산기</h2>
+        <h2>토크 계산기</h2>
         
         <div class="input-grid">
             <div class="input-group">
                 <label>① 로봇 질량 (m)</label>
                 <input type="number" id="mass" value="10" step="0.1" oninput="calculate()">
-                <small>단위: kg (전체 무게)</small>
+                <small>단위: kg</small>
             </div>
             <div class="input-group">
                 <label>② 반지름 (r)</label>
                 <input type="number" id="radius" value="0.15" step="0.01" oninput="calculate()">
-                <small>단위: m (지름의 절반)</small>
+                <small>단위: m</small>
             </div>
             <div class="input-group">
                 <label>③ 최대 경사각 (θ)</label>
@@ -68,50 +77,54 @@
             <div class="input-group">
                 <label>⑤ 장애물 높이 (h)</label>
                 <input type="number" id="height" value="0.05" step="0.01" oninput="calculate()">
-                <small>단위: m (턱 높이)</small>
+                <small>단위: m</small>
             </div>
-            <div class="input-group" style="border-color: #ffb74d;">
+            <div class="input-group" style="border-color: #ffb74d; background-color: #fff8e1;">
                 <label>⑥ 안전 계수 (Sf)</label>
                 <input type="number" id="safety" value="1.5" step="0.1" oninput="calculate()">
-                <small>2.0배 이상</small>
+                <small>결과값에 곱해짐</small>
             </div>
         </div>
 
-        <div class="compare-box">
-            <div class="scenario-card scenario-a">
-                <span class="card-title"> Case 1: 경사로</span>
-                <span class="card-val"><span id="total-slope">0</span> N·m</span>
-                <div class="card-detail">
-                    등판(τ<sub>slope</sub>) + 가속(τ<sub>acc</sub>)<br>
-                    <span id="detail-slope" style="font-size:0.8em; opacity:0.8;">0 + 0</span>
+        <div class="result-section">
+            <div class="result-card card-slope">
+                <span class="card-header"> CASE 1: 경사로 주행</span>
+                <div class="raw-row"><span>등판 토크:</span><span id="raw-slope">0 N·m</span></div>
+                <div class="raw-row"><span>가속 토크:</span><span id="raw-acc-a">0 N·m</span></div>
+                <div class="raw-row" style="border-top:1px dashed #ccc; margin-top:5px; padding-top:5px; font-weight:bold;">
+                    <span>순수 합계:</span><span id="sum-a">0 N·m</span>
+                </div>
+                <div class="final-val-box">
+                    <span class="final-label"> 최종 권장 스펙 (Sf 적용)</span>
+                    <span class="final-value" id="final-a">0 N·m</span>
+                    <span class="final-unit" id="final-a-kgf">(0 kgf·cm)</span>
                 </div>
             </div>
-            
-            <div class="scenario-card scenario-b">
-                <span class="card-title"> Case 2: 장애물</span>
-                <span class="card-val"><span id="total-step">0</span> N·m</span>
-                <div class="card-detail">
-                    장애물(τ<sub>step</sub>) + 가속(τ<sub>acc</sub>)<br>
-                    <span id="detail-step" style="font-size:0.8em; opacity:0.8;">0 + 0</span>
-                </div>
-            </div>
-        </div>
 
-        <div class="final-box">
-            <div style="margin-bottom: 5px; font-size: 1.1em;"> 최종 권장 모터 스펙 (안전계수 <span id="safety-disp">1.5</span>배 적용)</div>
-            <div class="final-val"><span id="final-result">0</span> N·m 이상</div>
-            <div style="font-size: 0.8em; opacity: 0.7;">* 두 시나리오 중 더 큰 부하(Worst Case)를 기준으로 산정함</div>
+            <div class="result-card card-step">
+                <span class="card-header"> CASE 2: 장애물 극복</span>
+                <div class="raw-row"><span>장애물 토크:</span><span id="raw-step">0 N·m</span></div>
+                <div class="raw-row"><span>가속 토크:</span><span id="raw-acc-b">0 N·m</span></div>
+                <div class="raw-row" style="border-top:1px dashed #ccc; margin-top:5px; padding-top:5px; font-weight:bold;">
+                    <span>순수 합계:</span><span id="sum-b">0 N·m</span>
+                </div>
+                <div class="final-val-box">
+                    <span class="final-label"> 최종 권장 스펙 (Sf 적용)</span>
+                    <span class="final-value" id="final-b">0 N·m</span>
+                    <span class="final-unit" id="final-b-kgf">(0 kgf·cm)</span>
+                </div>
+            </div>
         </div>
 
         <div class="log-box">
-            <div class="log-header"> 실시간 공식 대입 & 검증 로그</div>
+            <div class="log-title"> 상세 수식 검증 로그 (Formulas & Values)</div>
             <div id="log-content"></div>
         </div>
     </div>
 
     <script>
         function calculate() {
-            // 입력값
+            // 1. 입력값 가져오기
             const m = parseFloat(document.getElementById('mass').value) || 0;
             const r = parseFloat(document.getElementById('radius').value) || 0;
             const theta = parseFloat(document.getElementById('theta').value) || 0;
@@ -119,105 +132,125 @@
             const h = parseFloat(document.getElementById('height').value) || 0;
             const safety = parseFloat(document.getElementById('safety').value) || 1.5;
             
-            // 물리 상수
+            // 2. 상수 및 중간 변수
             const g = 9.81;
-            const I = (r > 0) ? (2/3) * m * r * r : 0; // 구형 쉘 관성모멘트
+            const NM_TO_KGFCM = 10.197;
             const thetaRad = theta * Math.PI / 180;
+            const sinTheta = Math.sin(thetaRad); // 로그 표시용
+            
+            // 관성모멘트 I (구형 쉘: 2/3 * m * r^2)
+            // *주의: r이 0이면 0 처리
+            const I = (r > 0) ? (2/3) * m * r * r : 0;
+            const I_term = (r > 0) ? (I / r) : 0; // I/r 항
 
-            // --- 1. 가속 토크 (공통) ---
-            // 공식: τ_acc = (I/r + mr) * a
-            const tAccel = (r > 0) ? (I / r + m * r) * a : 0;
+            // 로그 HTML 빌더 초기화
+            let log = "";
+            
+            // Helper function for coloring numbers
+            const num = (n) => `<span class="sub-val">${n}</span>`;
 
-            // --- 2. 등판 토크 (시나리오 A) ---
-            // 공식: τ_slope = mg * sin(θ) * r
-            const tSlope = m * g * Math.sin(thetaRad) * r;
-            const totalA = tSlope + tAccel;
+            // ---------------------------------------------------------
+            // STEP 1: 공통 물리량 계산 (관성 & 가속)
+            // ---------------------------------------------------------
+            log += `<div class="log-section"><span class="log-sec-title">Step 1. 공통 물리량 계산</span>`;
+            
+            // 1-1. 관성모멘트 (Moment of Inertia)
+            log += `<div class="formula-line">• 관성모멘트(구형 쉘) I = (2/3) · m · r²</div>`;
+            log += `<div class="calc-line">  = (2/3) × ${num(m)} × ${num(r)}² = <span class="result-hl">${I.toFixed(4)}</span> kg·m²</div>`;
+            
+            // 1-2. 가속 토크 (Acceleration Torque)
+            // 공식: τ_acc = (I/r + m·r) · a
+            const tAccel = (I_term + m * r) * a;
+            
+            log += `<div class="formula-line">• 가속 토크 τ_acc = (I/r + m·r) · a</div>`;
+            log += `<div class="calc-line">  = (${num(I.toFixed(4))}/${num(r)} + ${num(m)}×${num(r)}) × ${num(a)}</div>`;
+            log += `<div class="calc-line">  = (${num(I_term.toFixed(3))} + ${num((m*r).toFixed(3))}) × ${num(a)} = <span class="result-hl">${tAccel.toFixed(3)}</span> N·m</div>`;
+            log += `</div>`; // End Step 1
 
-            // --- 3. 장애물 토크 (시나리오 B) ---
-            // 공식: τ_step = mg * sqrt(r² - (r-h)²)
+            // ---------------------------------------------------------
+            // STEP 2: CASE 1 (경사로) 계산
+            // ---------------------------------------------------------
+            log += `<div class="log-section" style="border-left-color: #64b5f6;"><span class="log-sec-title" style="color:#64b5f6;">Step 2. CASE 1: 경사로 주행</span>`;
+            
+            // 2-1. 등판 토크
+            // 공식: τ_slope = m · g · sin(θ) · r
+            const tSlope = m * g * sinTheta * r;
+            
+            log += `<div class="formula-line">• 등판 토크 τ_slope = m · g · sin(θ) · r</div>`;
+            log += `<div class="calc-line">  = ${num(m)} × 9.81 × sin(${num(theta)}°) × ${num(r)}</div>`;
+            log += `<div class="calc-line">  = ${num(m)} × 9.81 × ${num(sinTheta.toFixed(3))} × ${num(r)} = <span class="result-hl">${tSlope.toFixed(3)}</span> N·m</div>`;
+            
+            // 2-2. 최종 합산
+            const sumA = tSlope + tAccel;
+            const finalA = sumA * safety;
+            
+            log += `<div class="formula-line">• CASE 1 최종 = (τ_slope + τ_acc) × 안전계수</div>`;
+            log += `<div class="calc-line">  = (${num(tSlope.toFixed(3))} + ${num(tAccel.toFixed(3))}) × ${num(safety)}</div>`;
+            log += `<div class="calc-line">  = ${num(sumA.toFixed(3))} × ${num(safety)} = <strong class="result-hl" style="color:#64b5f6; font-size:1.1em;">${finalA.toFixed(2)} N·m</strong></div>`;
+            log += `</div>`; // End Step 2
+
+            // ---------------------------------------------------------
+            // STEP 3: CASE 2 (장애물) 계산
+            // ---------------------------------------------------------
+            log += `<div class="log-section" style="border-left-color: #e57373;"><span class="log-sec-title" style="color:#e57373;">Step 3. CASE 2: 장애물 극복</span>`;
+            
             let tStep = 0;
-            let armLength = 0;
+            let sumB = 0;
+            let finalB = 0;
             let stepValid = true;
 
             if (r > 0 && h < r) {
-                armLength = Math.sqrt(Math.pow(r, 2) - Math.pow(r - h, 2));
+                // 3-1. 모멘트 암(팔 길이) 계산
+                const armLength = Math.sqrt(Math.pow(r, 2) - Math.pow(r - h, 2));
+                
+                log += `<div class="formula-line">• 모멘트 암 L = √(r² - (r-h)²)</div>`;
+                log += `<div class="calc-line">  = √(${num(r)}² - (${num(r)}-${num(h)})²)</div>`;
+                log += `<div class="calc-line">  = √(${Math.pow(r,2).toFixed(4)} - ${Math.pow(r-h,2).toFixed(4)}) = <span class="result-hl">${armLength.toFixed(4)}</span> m</div>`;
+                
+                // 3-2. 장애물 토크
                 tStep = m * g * armLength;
+                
+                log += `<div class="formula-line">• 장애물 토크 τ_step = m · g · L</div>`;
+                log += `<div class="calc-line">  = ${num(m)} × 9.81 × ${num(armLength.toFixed(4))} = <span class="result-hl">${tStep.toFixed(3)}</span> N·m</div>`;
+                
+                // 3-3. 최종 합산
+                sumB = tStep + tAccel;
+                finalB = sumB * safety;
+                
+                log += `<div class="formula-line">• CASE 2 최종 = (τ_step + τ_acc) × 안전계수</div>`;
+                log += `<div class="calc-line">  = (${num(tStep.toFixed(3))} + ${num(tAccel.toFixed(3))}) × ${num(safety)}</div>`;
+                log += `<div class="calc-line">  = ${num(sumB.toFixed(3))} × ${num(safety)} = <strong class="result-hl" style="color:#e57373; font-size:1.1em;">${finalB.toFixed(2)} N·m</strong></div>`;
+                
             } else if (h >= r) {
                 stepValid = false;
+                log += `<div class="calc-line" style="color:#ff5252;"> 계산 중단: 장애물 높이(h=${h})가 반지름(r=${r})보다 크거나 같습니다. 물리적으로 등판이 불가능합니다.</div>`;
+            } else {
+                log += `<div class="calc-line">입력값을 확인해주세요.</div>`;
             }
-            // 장애물 넘을 때도 가속도(관성)를 고려하여 더함 (최악조건)
-            const totalB = (stepValid) ? (tStep + tAccel) : 9999; 
-
-            // --- 4. 최종 결과 산출 ---
-            // 둘 중 큰 값 선택 (Max Load)
-            const maxLoad = (stepValid && totalB > totalA) ? totalB : totalA;
-            const finalSafe = maxLoad * safety;
+            log += `</div>`; // End Step 3
 
             // 화면 업데이트
-            document.getElementById('safety-disp').innerText = safety;
+            document.getElementById('log-content').innerHTML = log;
             
-            // 시나리오 A 표시
-            document.getElementById('total-slope').innerText = totalA.toFixed(2);
-            document.getElementById('detail-slope').innerText = `등판 ${tSlope.toFixed(2)} + 가속 ${tAccel.toFixed(2)}`;
+            // 상단 카드 업데이트 (이전 로직 유지)
+            document.getElementById('raw-slope').innerText = tSlope.toFixed(2) + " N·m";
+            document.getElementById('raw-acc-a').innerText = tAccel.toFixed(2) + " N·m";
+            document.getElementById('sum-a').innerText = sumA.toFixed(2) + " N·m";
+            document.getElementById('final-a').innerText = finalA.toFixed(2) + " N·m";
+            document.getElementById('final-a-kgf').innerText = `(${ (finalA * NM_TO_KGFCM).toFixed(1) } kgf·cm)`;
 
-            // 시나리오 B 표시
-            if (stepValid) {
-                document.getElementById('total-step').innerText = totalB.toFixed(2);
-                document.getElementById('detail-step').innerText = `장애물 ${tStep.toFixed(2)} + 가속 ${tAccel.toFixed(2)}`;
+            document.getElementById('raw-acc-b').innerText = tAccel.toFixed(2) + " N·m";
+            if(stepValid) {
+                document.getElementById('raw-step').innerText = tStep.toFixed(2) + " N·m";
+                document.getElementById('sum-b').innerText = sumB.toFixed(2) + " N·m";
+                document.getElementById('final-b').innerText = finalB.toFixed(2) + " N·m";
+                document.getElementById('final-b-kgf').innerText = `(${ (finalB * NM_TO_KGFCM).toFixed(1) } kgf·cm)`;
             } else {
-                document.getElementById('total-step').innerText = "불가";
-                document.getElementById('detail-step').innerText = "높이 ≥ 반지름";
+                document.getElementById('raw-step').innerText = "불가";
+                document.getElementById('sum-b').innerText = "-";
+                document.getElementById('final-b').innerText = "등판 불가";
+                document.getElementById('final-b-kgf').innerText = "-";
             }
-
-            // 최종 결과 표시
-            if (stepValid) {
-                document.getElementById('final-result').innerText = finalSafe.toFixed(2);
-            } else {
-                document.getElementById('final-result').innerText = "설계 수정 필요";
-            }
-
-            // --- 5. 상세 로그 생성 (HTML) ---
-            let logHTML = "";
-
-            // [로그] 가속 토크
-            logHTML += `<div class="formula"> 가속 토크 공식: τ<sub>acc</sub> = (I/r + m·r) × a</div>`;
-            logHTML += `<div class="calc-line">`;
-            logHTML += `&nbsp;= (${(I/r).toFixed(3)} + ${(m*r).toFixed(3)}) × ${a}<br>`;
-            logHTML += `&nbsp;= <span class="var-hl">${tAccel.toFixed(3)} N·m</span>`;
-            logHTML += `</div>`;
-
-            // [로그] 등판 토크
-            logHTML += `<div class="formula"> 등판 토크 공식: τ<sub>slope</sub> = m · g · sin(θ) · r</div>`;
-            logHTML += `<div class="calc-line">`;
-            logHTML += `&nbsp;= ${m} × ${g} × sin(${theta}°) × ${r}<br>`;
-            logHTML += `&nbsp;= <span class="var-hl">${tSlope.toFixed(3)} N·m</span>`;
-            logHTML += `</div>`;
-
-            // [로그] 장애물 토크
-            logHTML += `<div class="formula"> 장애물 토크 공식: τ<sub>step</sub> = m · g · √(r² - (r-h)²)</div>`;
-            logHTML += `<div class="calc-line">`;
-            if (stepValid) {
-                logHTML += `&nbsp;= ${m} × ${g} × ${armLength.toFixed(3)} (팔길이)<br>`;
-                logHTML += `&nbsp;= <span class="var-hl">${tStep.toFixed(3)} N·m</span>`;
-            } else {
-                logHTML += `&nbsp;<span style="color:#ff5252">계산 불가 (턱 높이 ${h}m가 반지름 ${r}m보다 큼)</span>`;
-            }
-            logHTML += `</div>`;
-
-            // [로그] 최종 판단
-            logHTML += `<div class="formula"> 최종 선정 논리: Max(시나리오 A, B) × 안전계수</div>`;
-            logHTML += `<div class="calc-line" style="border-left-color: #ffeb3b;">`;
-            if (stepValid) {
-                const winner = (totalB > totalA) ? "시나리오 B(장애물)" : "시나리오 A(경사로)";
-                logHTML += `&nbsp;더 힘든 조건인 <strong>[${winner}]</strong> 채택<br>`;
-                logHTML += `&nbsp;= ${maxLoad.toFixed(2)} × ${safety} (안전계수)<br>`;
-                logHTML += `&nbsp;= <strong style="color:#ffeb3b; font-size:1.2em;">${finalSafe.toFixed(2)} N·m</strong>`;
-            } else {
-                logHTML += `&nbsp;장애물 극복 불가능으로 계산 중단`;
-            }
-            logHTML += `</div>`;
-
-            document.getElementById('log-content').innerHTML = logHTML;
         }
 
         window.onload = calculate;
