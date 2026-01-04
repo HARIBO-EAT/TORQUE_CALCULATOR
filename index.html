@@ -138,9 +138,9 @@
             const thetaRad = theta * Math.PI / 180;
             const sinTheta = Math.sin(thetaRad); // 로그 표시용
             
-            // 관성모멘트 I (구형 쉘: 2/3 * m * r^2)
+            // 관성모멘트 I (구: 2/5 * m * r^2)
             // *주의: r이 0이면 0 처리
-            const I = (r > 0) ? (2/3) * m * r * r : 0;
+            const I = (r > 0) ? (2/5) * m * r * r : 0;
             const I_term = (r > 0) ? (I / r) : 0; // I/r 항
 
             // 로그 HTML 빌더 초기화
@@ -155,8 +155,8 @@
             log += `<div class="log-section"><span class="log-sec-title">Step 1. 공통 물리량 계산</span>`;
             
             // 1-1. 관성모멘트 (Moment of Inertia)
-            log += `<div class="formula-line">• 관성모멘트(구형 쉘) I = (2/3) · m · r²</div>`;
-            log += `<div class="calc-line">  = (2/3) × ${num(m)} × ${num(r)}² = <span class="result-hl">${I.toFixed(4)}</span> kg·m²</div>`;
+            log += `<div class="formula-line">• 관성모멘트(구형 쉘) I = (2/5) · m · r²</div>`;
+            log += `<div class="calc-line">  = (2/5) × ${num(m)} × ${num(r)}² = <span class="result-hl">${I.toFixed(4)}</span> kg·m²</div>`;
             
             // 1-2. 가속 토크 (Acceleration Torque)
             // 공식: τ_acc = (I/r + m·r) · a
